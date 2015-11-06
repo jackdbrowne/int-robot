@@ -1,0 +1,16 @@
+
+<launch>
+  <master auto="start"/>
+ 
+  <param name="/use_sim_time" value="true"/>
+
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="$(find socspioneer)/meeting.yaml" />
+  <!-- Run Stage -->
+  <node name="stageros" pkg="stage_ros" type="stageros" args="$(find socspioneer)/meeting.world" />
+  <!-- Run Rviz -->
+  <node name="rviz" pkg="rviz" type="rviz" />
+  <!--- Run AMCL -->
+  <node name="amcl" pkg="amcl" type="amcl" args="scan:=base_scan" />
+
+</launch>

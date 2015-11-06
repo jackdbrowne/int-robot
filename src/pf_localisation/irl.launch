@@ -1,0 +1,11 @@
+<launch>
+  <param name="/use_sim_time" value="false"/>
+
+  <include file="/data/private/ros/socspioneer/p2os_teleop_joy.launch" />
+  
+  <!-- Run the map server -->
+  <node name="map_server" pkg="map_server" type="map_server" args="/data/private/ros/socspioneer/lgfloor.yaml" />
+
+  <!-- Run rviz -->
+  <node name="rviz" pkg="rviz" type="rviz" />
+</launch>

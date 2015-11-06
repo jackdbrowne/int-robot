@@ -1,0 +1,27 @@
+
+<launch>
+  <master auto="start"/>
+
+        <!-- Start p2os driver -->
+	<!-- You should set the port to whichever one is at the end of USB-serial converter -->
+	<node pkg="p2os_driver" type="p2os_driver" name="p2os">
+	        <param name="port" value="/dev/ttyUSB0" />
+	        <param name="use_sonar" value="true" /> 
+	        <remap from="/pose" to="/odom" /></node>
+		
+	<!-- run hokuyo laser node -->
+	<node pkg="hokuyo_node" type="hokuyo_node" name="hokuyo">
+		<remap from="/laser" to="/base_scan" />
+		<remap from="/scan" to="/base_scan" /></node>
+
+	<!-- transform laser co-ordinates into robot-base co-ordinate frame -->
+	<node pkg="tf" type="static_transform_publisher" name="stp_laser" output="screen" args="0.135 0 0.202 0 0 0 base_link laser 100" />
+
+	<!-- Run Rviz -->
+  	<node name="rviz" pkg="rviz" type="rviz" />
+  	<!-- Run the map server -->
+  	<node name="map_server" pkg="map_server" type="map_server" args="$(find socspioneer)/meeting.yaml" />
+  	<!--- Run AMCL -->
+  	<node name="amcl" pkg="amcl" type="amcl" args="scan:=base_scan" />
+
+</launch>

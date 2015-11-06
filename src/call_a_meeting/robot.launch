@@ -1,0 +1,12 @@
+<launch>
+	<master auto="start"/>
+
+	<include file="$(find 2dnav)/run_robot_nodes.launch"/>
+	<include file="$(find 2dnav)/move_base_robot.launch"/>
+
+	<node name="localiser" pkg="call_a_meeting" type="localiser.py" />
+	<node name="room_checker" pkg="call_a_meeting" type="room_checker.py" />
+	<node name="leg_detector" pkg="leg_detector" type="leg_detector_node" />
+	<node name="person_finder" pkg="call_a_meeting" type="person_finder.py" />
+	<node name="ask_server" pkg="call_a_meeting" type="askserviceserver.py" />
+</launch>

@@ -1,0 +1,287 @@
+\documentclass[12pt]{article}
+\usepackage{times}
+\usepackage[backend=biber,style=authoryear]{biblatex}
+\usepackage[british]{babel}
+\usepackage{graphicx}
+\usepackage{courier}
+\usepackage{gensymb}
+\usepackage{pgfplots}
+
+\addbibresource{refs.bib}
+
+\begin{document}
+
+\title{Intelligent Robotics --- Assignment Three}
+
+\author{Jack Browne, Jack Jacques, Hugh Samson, and Matthew Williamson}
+\date{\today}
+\maketitle
+
+\section{Experimentation}
+
+\subsection{Local Costmap}
+Through observation we saw that the local costmap was failing to detect obstacles and driving into them. We managed to determine the reason for these failures which happened in consecutive runs, one was because the goal was off the map due to incorrect co-ordinates and another was the robot failed to localise fully before undertaking its next state. Due to this we decided to run a series of tests after correcting this, where the results are below.
+
+\begin{center}
+\begin{tabular}{ |p{2cm}|p{1cm}|p{9cm}| } 
+ \hline
+ Object & Find Goal & Observations \\
+ \hline
+ $1m ^ 2$ of black paper & Yes & Took a while to build a new local costmap but then found its way around \\[0.3cm]
+ Tall Chair & Yes & Got round it easily, didn't even stop to replan\\[0.3cm]
+ 1.2m board & Yes & Took three minutes to plan around the object --- as it was sandwiched between it and the bin --- but eventually found its way around\\[0.3cm]
+ Two chairs with 3ft gap & Yes & Took eight minutes as it couldn't find a gap through the inflated objects. When a chair was moved back slightly to 5ft the robot found a way through.\\
+ 
+ \hline
+\end{tabular}
+\end{center}
+
+\subsection{People Detection}
+
+Detecting people has to be used both to check a meeting room, and detemine people to ask to the meeting. To do this we tested several different approaches.
+
+\subsubsection{Leg Detection}
+
+\paragraph{ROC Analysis}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+& Positive & Negative\\
+\hline
+True & 14 & 2 \\
+False & 13 & 1 \\
+
+\hline
+\end{tabular}
+\end{center}
+
+This gives face detection an overall \textbf{sensitivity} of \textbf{0.93333333333} and \textbf{specificity} of \textbf{0.13333333333}. Leg detection normally picks up people when they are there, however there is almost always noise (other, non-people picked up). However is reasonably controlled environments, such as the meeting rooms we noticed that the false positives were very consistent - this meant we were able to factor this into our calculation when figuring out whether the room is empty. 
+
+\subsubsection{Face Detection}
+Face detection is one of the most accurate ways to detect people when the conditions are perfect. As shown in the table below the webcam can't be on angle, but it does pick up faces at almost all distance intervals. There are very few false negatives, which means that if you see a face it's almost guaranteed to be a person.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+ & Angle & 0 & 45 & 90 & 135 & 180 \\
+\hline
+Distance & & & & & & \\
+1 & & yes & no & no & no & no \\
+1.5 & & yes & no & no & no & no \\
+2 & & yes & no & no & no & no \\
+3 & & yes & no & no & no & no \\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{Getting Distance From Face Detection}
+
+Face detection also lets you get a rough position from the orientation of the robot --- from AMCL --- and the distance, due to all faces being so similar the size of the box can then be used to find the approximate distance from the robot.
+
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Distance (m) & Box Size\\ %TODO BOX SIZE
+\hline
+1 & 290 \\
+1.3	& 230-255 \\
+1.6	& 190-220\\
+1.9	& 180-210\\
+2.2	& 150-180\\
+2.5	& 140-160\\
+2.8	& 110-130\\
+
+%Different poses can affect size of box - UNRELIABLE
+
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{ROC Analysis}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+& Positive & Negative\\
+\hline
+True & 7 & 12 \\
+False & 3 & 8 \\
+
+\hline
+\end{tabular}
+\end{center}
+Many of the false positives were a result of the face detection only being fully reliable if the person is facing the camera head on.
+This gives face detection an overall \textbf{sensitivity} of \textbf{0.46666666666} and \textbf{specificity} of \textbf{0.8}
+
+
+\subsubsection{Body Detection}
+
+Unlike face detection, body detection can determine whether a person is in the field of view without them having to face the camera. This is obviously a huge advantage, but due to it detecting the body from different angles --- and thus the box always changing size --- it's almost impossible to get the distance.
+%Needs full body in view
+However body detection also requires the full body to be in view, and due to the way it works the colours need to stand out from the background which can occasionally be an issue. Due to the former we found that the ideal distance was around two metres away. Further would lose some stability.
+
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline
+ & Angle & 0 & 45 & 90 & 135 & 180 \\
+\hline
+Distance & & & & & & \\
+1 & & yes & yes & yes & no & yes \\ %Flickers 
+1.5 & & yes & no & no & yes & yes \\
+2 & & yes & yes & yes & yes & yes \\ %Stable
+3 & & yes & yes & yes & yes & yes \\ %Flickers
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{ROC Analysis}
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline
+& Positive & Negative\\
+\hline
+True & 11 & 8 \\
+False & 6 & 4 \\
+
+\hline
+\end{tabular}
+\end{center}
+Many of the false positives were a result of the face detection only being fully reliable if the person is facing the camera head on.
+This gives face detection an overall \textbf{sensitivity} of \textbf{0.73333333333} and \textbf{specificity} of \textbf{0.53333333333}
+
+Body detection is more sensitive than face detection but also less specific; many of the false negatives arise when the colour contrast between the body and the background is low.
+
+
+\subsection{Meeting Rooms}
+
+One of the biggest challenges of the task was how to correctly say whether a meeting room was empty or not. This was crucial as if we said a full room was empty we would effectively fail the task outright, but it needed to be able to detect an empty room otherwise it would get stuck in a loop forever. 
+
+To solve this we ran numerous tests, as steel posts were being picked up as legs consistently we needed a way to filter them out.
+
+\subsubsection{Sum the number of legs}
+
+Initially we decided to have the robot spin 360\degree and increment a counter for every leg it saw. Due to the amount of laser readings this ended up being a number usually between 3000-6000. However this approach had major flaws, as you can see from the first run with people in the room there were significantly fewer counts than without, this is because the legs weren't being picked up properly, and also blocking posts which were being picked up in an empty room.
+
+Alongside this computation played a part, as there's no solid way to tell how many laser readings had been taken as this varies with the amount of other tasks within the computer.
+
+\paragraph{Empty Room}
+%Occasionally errors when it has no leg poses
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Attempt & Scan value\\
+\hline
+1 & 2999\\
+2 & 3804\\
+3 & 2574\\
+4 & 6081\\
+5 & 4025\\
+\hline
+\textbf{Average} & \textbf{3897}\\
+\hline
+\end{tabular}
+\end{center}
+
+%TODO FIX THESE VALUES
+\paragraph{With People}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+Attempt & Scan value\\
+\hline
+1 & 1200\\
+2 & 3804\\
+3 & 2574\\
+4 & 6081\\
+5 & 4025\\
+\hline
+\textbf{Average} & \textbf{3897}\\
+\hline
+\end{tabular}
+\end{center}
+
+\subsubsection{Average Readings}
+
+To fix this issue we began to average how many legs there were in each scan. The reasoning behind this was that objects that were being picked up were visibly less stable than actual legs. This was only exaggerated during movement (the spin)  which made this approach fairly reliable.
+
+\paragraph{Meeting Room A}
+\subparagraph{Without People}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ & Average no. people detected over a 360\degree rotation\\
+\hline
+minimum & 0.0 \\
+maximum & 0.075427913682 \\
+%3 & 0.037846839285\\
+%4 & 0.0\\
+%5 & 0.0\\
+\hline
+\textbf{Average} & \textbf{0.02265495059}\\
+\hline
+\end{tabular}
+\end{center}
+
+\subparagraph{With People}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ & Average no. people detected over a 360\degree rotation\\
+\hline
+%1 & 0.40173820590 \\
+%2 & 0.44843052318 \\
+maximum & 0.62987982349 \\
+minumum & 0.27124502334\\
+%5 & 0.39034824123\\
+\hline
+\textbf{Average} & \textbf{0.42832836342}\\
+\hline
+\end{tabular}
+\end{center}
+
+\paragraph{Meeting Room B}
+\subparagraph{Without People}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ & Average no. people detected over a 360\degree rotation\\
+\hline
+%1 & 0.50750619173 \\
+%2 & 0.443209826946 \\
+%3 & 0.490392297506 \\
+minimum & 0.351550251245 \\
+maximum & 0.58761203289 \\
+\hline
+\textbf{Average} & \textbf{0.47605412006}\\
+\hline
+\end{tabular}
+\end{center}
+
+\subparagraph{With People}
+\begin{center}
+\begin{tabular}{|c|c|}
+\hline
+ & Average no. people detected over a 360\degree rotation\\
+\hline
+%1 & 1.15458261967 \\
+%minimum & 0.985155284405 \\
+%3 & 1.14515662193 \\
+maximum & 1.24989628792 \\
+%5 & 1.21567690372 \\
+minimum & 0.762219905853 \\
+\hline
+\textbf{Average} & \textbf{1.08544793725}\\
+\hline
+\end{tabular}
+\end{center}
+
+Due to these tests we set the `room empty' threshold at the lowest value we saw when there were people inside the room -- 0.762 -- and anything below this we assumed was an empty room.
+
+Outside of the experiments there were a few anomalies, and thus rather than spinning once we decided to do this behaviour twice, because as stated previously an incorrect result can seriously hamper the entire process. If, and only if, the robot decides the meeting room is empty on both attempts (i.e, both spins give values below 0.762 threshold) will it decide that a room is `empty'.
+
+%Outside of experiments there were some anomalyes, which didn't reoccur on a second attempt, therefore repeating the process helped solve the issue
+%Only say the room is empty when its both values on both tests are below the threshold (the minimum of the with people) as the minimum with people is slightly bigger than the maximum of without people
+
+\end{document}

@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta charset="UTF-8">
+  <title>Leslie | IR 2014</title>
+
+  <!-- Latest compiled and minified CSS -->
+	<link rel="stylesheet" href="ir_files/bootstrap.css">
+
+	<!-- Optional theme -->
+	<link rel="stylesheet" href="ir_files/bootstrap-theme.css">
+
+	<!-- Latest compiled and minified JavaScript -->
+	<script src="ir_files/bootstrap.js"></script>
+	
+	<style>
+		body{text-align:justify;
+			background-color:#CAE49F;}
+		#author{color:#777}
+		div{background-color:white;}
+		div.container{border-style:solid;
+			border-color:#477141}
+	</style>
+
+ </head>
+ <body style="margin-bottom:100px;margin-top:50px">
+  <script src="//ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js" type="text/javascript"></script>
+
+	<nav class="navbar navbar-default navbar-fixed-bottom">
+		<div class="container-fluid">
+		  <!-- Brand and toggle get grouped for better mobile display -->
+		  <div class="navbar-header">
+		    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+		      <span class="sr-only">Toggle navigation</span>
+		      <span class="icon-bar"></span>
+		      <span class="icon-bar"></span>
+		      <span class="icon-bar"></span>
+		    </button>
+		    <a class="navbar-brand" href="#">Leslie</a>
+		  </div>
+
+		  <!-- Collect the nav links, forms, and other content for toggling -->
+		  <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+		    <ul class="nav navbar-nav">
+		      <li><a href="#cam">Call A Meeting<span class="sr-only">(current)</span></a></li>
+		      <li><a href="#s">Solution</a></li>
+		      <li><a href="#a">Advice</a></li>
+		      <li><a href="#r">Resources</a></li>
+		    </ul>
+		  </div><!-- /.navbar-collapse -->
+		</div><!-- /.container-fluid -->
+	</nav>
+	<div class="container"> <!-- margin-top: 50px -->
+		<h1>LESLIE</h1>
+		<div id="author" style="margin-top:-10px"><b>Jack Browne, Jack Jacques, Hugh Samson, Matt Williamson</b></div>
+
+		<h2 id="cam">Call A Meeting</h2>	
+		<p>Our task was to design a system for our robot to complete a similar
+ challenge to the 1996 AAAI Mobile Robot Competition. First our robot 
+must localise within the space after being given an initial pose, then 
+find which one of two meeting rooms were empty. Afterwards it should 
+search the space for people, and upon finding one ask whether they would
+ like to attend the meeting. If they said yes then the robot should 
+guide them back to the empty meeting room, otherwise it should continue 
+looking for participants. The task would be completed if the robot 
+managed to guide two people to the meeting room before the fifteen 
+minute time period elapsed, otherwise it would fail.</p>
+
+		<h2 id="s">Solution</h2>
+		<h3 id="ca">Control Architecture</h3>
+		<p>We had identified early on that the task could well represented as a
+ finite state machine; due to the clear breakdown of tasks and the 
+natural progression between tasks at all stages. We developed the 
+following state machine to help guide us through our solution to the 
+task.</p><br>
+		<img src="ca.jpg">
+
+		<h3 id="l">Localisation</h3>
+		<p>For localisation we used the AMCL implementation included within 
+rospy, as it had the advantage of tying in with the other behaviours 
+that we had already implemented. Equally our own implementation of 
+localisation - Augmented Monte Carlo Localisation - lacked the ability 
+to adapt, and therefore would become inefficient using large number of 
+particles needed to localise initially</p>
+		
+		<h3 id="nm">Navigation and Movement</h3>
+		<p>We used two different approaches for the movement of our robot; our
+ own implementation of random movement so the robot could initially 
+localise, and the Navigation Stack. The Navigation Stack was 
+particularly useful as it was directly compatible with SMACH, and 
+therefore we could pass goals directly to the move_base server and the 
+robot would path plan, navigate, and avoid collisions by itself.</p>
+		
+		<h3 id="pd">People Detecion</h3>
+		<p>We had two different approaches to detecting people, one was to 
+detect legs with the laser - which was used predominantly when checking 
+whether a room was empty - and body detection using the webcam - for 
+when the robot was patrolling. The laser data gave a lot of false 
+positives as the shape of human legs look much like that of a chair's, 
+and therefore it wasn't appropriate in the roaming environment where it 
+may encounter such objects and the readings of how many false positives 
+varied depending on the area covered. However in the meeting room the 
+reading was much more stable, so we took an average of every laser scan 
+to see how many contained legs, and as there was a clear difference in 
+those rooms that contained people as to those that didn't we based our 
+logic on this.</p>
+
+		<h2 id="a">Advice</h2>
+			<ul>
+				<li>Start working on the tasks as soon as the previous task is done. You don't want to leave any of it till the last minute.</li>
+				<li>Lots of expermentation to back up the choices in your design of the solution and variables used.</li>
+				<li>Make sure you keep the batteries charged overnight and when you aren't using them</li>
+				<li>Talk to the demonstrators, if you are unsure about anything to do with how they are going to mark your solution</li>
+				<li>Aim to have most of the solution done at least a week before the
+ deadline. This is to ensure that everything works together and then you
+ can iron out any bugs</li>
+ 				<li>Don't rely on the visualisation. Robots can do funny things in the real world</li>
+			</ul>
+
+		<h2 id="r">Resources</h2>
+		<h3>Hardware</h3>
+
+		<ul>
+			<li>
+				<a href="resources/Pioneer3DX-P3DX-RevA.pdf" target="_blank">Pioneer 3-DX robotic platform</a><br>
+			</li>
+			<li>
+				<a href="resources/logitech9000.pdf" target="_blank">Logitech Quickcam Pro 9000</a><br>
+			</li>
+			<li>
+				<a href="resources/URG-04LX_spec_en.pdf" target="_blank">Hokuyo Scanning Laser Range Finder URG-04LX sensor</a><br>
+			</li>
+		</ul>
+		
+		<h3>Software</h3>
+
+		<ul>
+			<li>
+				<a href="http://wiki.ros.org/rospy">rospy</a>
+			</li>
+			<li>
+				<a href="http://docs.opencv.org/">OpenCV</a>
+			</li>
+		</ul>
+
+	</div>
+ 
+
+
+</body></html>
